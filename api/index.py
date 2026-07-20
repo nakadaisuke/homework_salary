@@ -2,8 +2,8 @@ import os
 
 from flask import Flask, request, jsonify
 
-from _lib.db import get_conn
-from _lib.auth import require_auth, set_session_cookie, COOKIE_NAME
+from api._lib.db import get_conn
+from api._lib.auth import require_auth, set_session_cookie, COOKIE_NAME
 
 app = Flask(__name__)
 
