@@ -1,25 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Job, Person } from "@/lib/types";
+import { Job } from "@/lib/types";
 import JobCard from "@/components/JobCard";
 import JobForm from "@/components/JobForm";
 
-export default function BoardClient({
-  initialJobs,
-  people,
-}: {
-  initialJobs: Job[];
-  people: Person[];
-}) {
+export default function BoardClient({ initialJobs }: { initialJobs: Job[] }) {
   const [jobs, setJobs] = useState(initialJobs);
   const [creating, setCreating] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  }
 
   async function handleCreate(values: Omit<Job, "id" | "is_active">) {
     const res = await fetch("/api/jobs", {
@@ -49,20 +37,6 @@ export default function BoardClient({
     setJobs((prev) => prev.filter((j) => j.id !== id));
   }
 
-  async function handleComplete(job: Job, personId: number) {
-    const res = await fetch("/api/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ person_id: personId, job_id: job.id }),
-    });
-    if (!res.ok) {
-      showToast("登録に失敗しました");
-      return;
-    }
-    const person = people.find((p) => p.id === personId);
-    showToast(`${person?.name ?? "だれか"}に¥${job.salary_yen.toLocaleString()}加算しました`);
-  }
-
   return (
     <div>
       <div className="row">
@@ -80,27 +54,12 @@ export default function BoardClient({
         </div>
       )}
 
-      {people.length === 0 && (
-        <p className="muted">
-          まだメンバーが登録されていません。「メンバー」ページから追加してください。
-        </p>
-      )}
-
       <div className="card-grid">
         {jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            people={people}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            onComplete={(personId) => handleComplete(job, personId)}
-          />
+          <JobCard key={job.id} job={job} onUpdate={handleUpdate} onDelete={handleDelete} />
         ))}
         {jobs.length === 0 && !creating && <p className="muted">まだ仕事がありません。</p>}
       </div>
-
-      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }

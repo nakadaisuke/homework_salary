@@ -13,6 +13,7 @@ export interface Person {
   name: string;
   role: Role;
   balance_yen: number;
+  settled_total_yen: number;
 }
 
 export interface Job {

@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from flask import Flask, request, jsonify
 
@@ -41,11 +42,20 @@ def list_people():
         cur.execute(
             """
             SELECT p.id, p.name, p.role,
-                   COALESCE(SUM(c.salary_yen_snapshot)
-                            FILTER (WHERE c.settlement_id IS NULL), 0) AS balance_yen
+                   COALESCE(c.unpaid, 0) AS balance_yen,
+                   COALESCE(s.settled, 0) AS settled_total_yen
             FROM people p
-            LEFT JOIN completions c ON c.person_id = p.id
-            GROUP BY p.id
+            LEFT JOIN (
+                SELECT person_id, SUM(salary_yen_snapshot) AS unpaid
+                FROM completions
+                WHERE settlement_id IS NULL
+                GROUP BY person_id
+            ) c ON c.person_id = p.id
+            LEFT JOIN (
+                SELECT person_id, SUM(total_yen) AS settled
+                FROM settlements
+                GROUP BY person_id
+            ) s ON s.person_id = p.id
             ORDER BY p.created_at
             """
         )
@@ -69,6 +79,7 @@ def create_person():
         person = cur.fetchone()
         conn.commit()
     person["balance_yen"] = 0
+    person["settled_total_yen"] = 0
     return jsonify(person), 201
 
 
@@ -236,26 +247,45 @@ def list_completions():
 def create_completion():
     data = request.get_json(silent=True) or {}
     person_id = data.get("person_id")
-    job_id = data.get("job_id")
-    if not isinstance(person_id, int) or not isinstance(job_id, int):
-        return jsonify({"error": "person_id and job_id are required"}), 400
+    job_ids = data.get("job_ids")
+    completed_on = data.get("completed_on")
+
+    if not isinstance(person_id, int) or not isinstance(job_ids, list) or not job_ids:
+        return jsonify({"error": "person_id and a non-empty job_ids array are required"}), 400
+    if not all(isinstance(j, int) for j in job_ids):
+        return jsonify({"error": "job_ids must be integers"}), 400
+    if completed_on is not None:
+        try:
+            date.fromisoformat(completed_on)
+        except ValueError:
+            return jsonify({"error": "completed_on must be an ISO date (YYYY-MM-DD)"}), 400
+
     with get_conn() as conn, conn.cursor() as cur:
-        cur.execute("SELECT title, salary_yen FROM jobs WHERE id = %s", (job_id,))
-        job = cur.fetchone()
-        if not job:
-            return jsonify({"error": "job not found"}), 404
         cur.execute(
-            """
-            INSERT INTO completions (person_id, job_id, job_title_snapshot, salary_yen_snapshot)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id, person_id, job_id, job_title_snapshot, salary_yen_snapshot,
-                      completed_on, settlement_id, created_at
-            """,
-            (person_id, job_id, job["title"], job["salary_yen"]),
+            "SELECT id, title, salary_yen FROM jobs WHERE id = ANY(%s)", (job_ids,)
         )
-        completion = cur.fetchone()
+        jobs_by_id = {row["id"]: row for row in cur.fetchall()}
+        missing = [j for j in job_ids if j not in jobs_by_id]
+        if missing:
+            return jsonify({"error": f"job(s) not found: {missing}"}), 404
+
+        completions = []
+        for job_id in job_ids:
+            job = jobs_by_id[job_id]
+            cur.execute(
+                """
+                INSERT INTO completions
+                    (person_id, job_id, job_title_snapshot, salary_yen_snapshot, completed_on)
+                VALUES (%s, %s, %s, %s, COALESCE(%s, CURRENT_DATE))
+                RETURNING id, person_id, job_id, job_title_snapshot, salary_yen_snapshot,
+                          completed_on, settlement_id, created_at
+                """,
+                (person_id, job_id, job["title"], job["salary_yen"], completed_on),
+            )
+            completions.append(cur.fetchone())
         conn.commit()
-    return jsonify(completion), 201
+
+    return jsonify({"completions": completions}), 201
 
 
 # ---------------------------------------------------------------------------

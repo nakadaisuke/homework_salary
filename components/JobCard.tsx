@@ -1,25 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { DAY_LABEL, Job, Person } from "@/lib/types";
+import { DAY_LABEL, Job } from "@/lib/types";
 import JobForm from "@/components/JobForm";
 
 export default function JobCard({
   job,
-  people,
   onUpdate,
   onDelete,
-  onComplete,
 }: {
   job: Job;
-  people: Person[];
   onUpdate: (id: number, values: Partial<Job>) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
-  onComplete: (personId: number) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
-  const [personId, setPersonId] = useState<string>(people[0] ? String(people[0].id) : "");
-  const [completing, setCompleting] = useState(false);
 
   if (editing) {
     return (
@@ -62,32 +56,6 @@ export default function JobCard({
               {DAY_LABEL[d]}
             </span>
           ))}
-        </div>
-      )}
-
-      {people.length > 0 && (
-        <div className="row" style={{ marginTop: "0.6rem" }}>
-          <select value={personId} onChange={(e) => setPersonId(e.target.value)}>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <button
-            className="button"
-            disabled={completing || !personId}
-            onClick={async () => {
-              setCompleting(true);
-              try {
-                await onComplete(Number(personId));
-              } finally {
-                setCompleting(false);
-              }
-            }}
-          >
-            {completing ? "登録中..." : "完了！"}
-          </button>
         </div>
       )}
     </div>
