@@ -288,6 +288,23 @@ def create_completion():
     return jsonify({"completions": completions}), 201
 
 
+@app.route("/api/completions/<int:completion_id>", methods=["DELETE"])
+@require_auth
+def delete_completion(completion_id: int):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT settlement_id FROM completions WHERE id = %s", (completion_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "not found"}), 404
+        if row["settlement_id"] is not None:
+            return jsonify({"error": "精算済みのため削除できません"}), 400
+        cur.execute("DELETE FROM completions WHERE id = %s", (completion_id,))
+        conn.commit()
+    return jsonify({"ok": True})
+
+
 # ---------------------------------------------------------------------------
 # settlements
 # ---------------------------------------------------------------------------

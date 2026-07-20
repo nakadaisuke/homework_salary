@@ -5,7 +5,13 @@ import { Job } from "@/lib/types";
 import JobCard from "@/components/JobCard";
 import JobForm from "@/components/JobForm";
 
-export default function BoardClient({ initialJobs }: { initialJobs: Job[] }) {
+export default function BoardClient({
+  initialJobs,
+  heading = "求人ボード",
+}: {
+  initialJobs: Job[];
+  heading?: string;
+}) {
   const [jobs, setJobs] = useState(initialJobs);
   const [creating, setCreating] = useState(false);
 
@@ -40,7 +46,7 @@ export default function BoardClient({ initialJobs }: { initialJobs: Job[] }) {
   return (
     <div>
       <div className="row">
-        <h1>求人ボード</h1>
+        <h1>{heading}</h1>
         {!creating && (
           <button className="button" onClick={() => setCreating(true)}>
             ＋ 仕事をつくる

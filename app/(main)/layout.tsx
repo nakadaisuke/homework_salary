@@ -13,6 +13,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <Link href="/people" className="nav-link">
           メンバー
         </Link>
+        <Link href="/admin" className="nav-link">
+          管理
+        </Link>
       </nav>
       <main>{children}</main>
     </>

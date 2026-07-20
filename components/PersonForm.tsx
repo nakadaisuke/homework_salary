@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Role, ROLE_LABEL } from "@/lib/types";
+import { Person, Role, ROLE_LABEL } from "@/lib/types";
 
 export default function PersonForm({
+  initial,
   onSubmit,
   onCancel,
 }: {
+  initial?: Person;
   onSubmit: (values: { name: string; role: Role }) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<Role>("child");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [role, setRole] = useState<Role>(initial?.role ?? "child");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 

@@ -5,7 +5,13 @@ import { Person, Role } from "@/lib/types";
 import PersonCard from "@/components/PersonCard";
 import PersonForm from "@/components/PersonForm";
 
-export default function PeopleClient({ initialPeople }: { initialPeople: Person[] }) {
+export default function PeopleClient({
+  initialPeople,
+  heading = "メンバー",
+}: {
+  initialPeople: Person[];
+  heading?: string;
+}) {
   const [people, setPeople] = useState(initialPeople);
   const [creating, setCreating] = useState(false);
 
@@ -21,6 +27,17 @@ export default function PeopleClient({ initialPeople }: { initialPeople: Person[
     setCreating(false);
   }
 
+  async function handleUpdate(id: number, values: Partial<Person>) {
+    const res = await fetch(`/api/people/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    });
+    if (!res.ok) throw new Error("failed");
+    const updated: Person = await res.json();
+    setPeople((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+  }
+
   async function handleDelete(id: number) {
     await fetch(`/api/people/${id}`, { method: "DELETE" });
     setPeople((prev) => prev.filter((p) => p.id !== id));
@@ -29,7 +46,7 @@ export default function PeopleClient({ initialPeople }: { initialPeople: Person[
   return (
     <div>
       <div className="row">
-        <h1>メンバー</h1>
+        <h1>{heading}</h1>
         {!creating && (
           <button className="button" onClick={() => setCreating(true)}>
             ＋ メンバーをつくる
@@ -45,7 +62,7 @@ export default function PeopleClient({ initialPeople }: { initialPeople: Person[
 
       <div className="card-grid">
         {people.map((p) => (
-          <PersonCard key={p.id} person={p} onDelete={handleDelete} />
+          <PersonCard key={p.id} person={p} onUpdate={handleUpdate} onDelete={handleDelete} />
         ))}
         {people.length === 0 && !creating && <p className="muted">まだメンバーがいません。</p>}
       </div>
