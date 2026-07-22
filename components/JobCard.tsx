@@ -50,7 +50,7 @@ export default function JobCard({
       {job.description && <p className="muted">{job.description}</p>}
 
       {job.days_of_week.length > 0 && (
-        <div className="row" style={{ gap: "0.3rem" }}>
+        <div className="day-picker">
           {job.days_of_week.map((d) => (
             <span key={d} className="badge">
               {DAY_LABEL[d]}

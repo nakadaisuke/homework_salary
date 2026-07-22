@@ -130,11 +130,15 @@ export default function PersonDetailClient({
                     />
                     <strong>{job.title}</strong>
                     <span className="badge badge-money">¥{job.salary_yen.toLocaleString()}</span>
-                    {job.days_of_week.map((d) => (
-                      <span key={d} className="badge">
-                        {DAY_LABEL[d]}
+                    {job.days_of_week.length > 0 && (
+                      <span className="day-picker" style={{ gap: "0.3rem" }}>
+                        {job.days_of_week.map((d) => (
+                          <span key={d} className="badge">
+                            {DAY_LABEL[d]}
+                          </span>
+                        ))}
                       </span>
-                    ))}
+                    )}
                   </span>
                 </label>
               ))}
