@@ -7,7 +7,7 @@ import JobForm from "@/components/JobForm";
 
 export default function BoardClient({
   initialJobs,
-  heading = "求人ボード",
+  heading = "職業Book",
 }: {
   initialJobs: Job[];
   heading?: string;
@@ -60,7 +60,7 @@ export default function BoardClient({
         </div>
       )}
 
-      <div className="card-grid">
+      <div className="card-grid-board">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} onUpdate={handleUpdate} onDelete={handleDelete} />
         ))}

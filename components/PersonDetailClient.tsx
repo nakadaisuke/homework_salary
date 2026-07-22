@@ -116,7 +116,7 @@ export default function PersonDetailClient({
           仕事を記録する
         </div>
         {jobs.length === 0 ? (
-          <p className="muted">まだ仕事がありません。求人ボードから作成してください。</p>
+          <p className="muted">まだ仕事がありません。職業Bookから作成してください。</p>
         ) : (
           <>
             <div className="card-grid" style={{ gap: "0.5rem" }}>

@@ -8,7 +8,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           おてつだいきゅうよ
         </Link>
         <Link href="/board" className="nav-link">
-          求人ボード
+          職業Book
         </Link>
         <Link href="/people" className="nav-link">
           メンバー
